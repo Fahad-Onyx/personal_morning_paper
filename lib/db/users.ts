@@ -31,3 +31,7 @@ export async function listUsers(): Promise<User[]> {
   const rows = getDb().prepare("SELECT * FROM users ORDER BY created_at").all() as UserRow[];
   return rows.map(toUser);
 }
+
+export async function renameUser(id: string, name: string): Promise<void> {
+  getDb().prepare("UPDATE users SET name = ? WHERE id = ?").run(name, id);
+}

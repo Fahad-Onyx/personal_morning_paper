@@ -9,7 +9,7 @@ Built for NaSCon '26 (Eynvision).
 | Phase | Scope | State |
 |---|---|---|
 | 1 | Project setup, SQLite schema, data-access layer, home page | ✅ done |
-| 2 | Onboarding → LLM interest profile | ⏳ |
+| 2 | Onboarding → LLM interest profile | ✅ done |
 | 3 | RSS ingestion, text extraction, dedupe | ⏳ |
 | 4 | Ranking + edition builder | ⏳ |
 | 5 | Web reader | ⏳ |

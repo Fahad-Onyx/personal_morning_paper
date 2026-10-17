@@ -23,7 +23,14 @@ export interface ProfileTopic {
 }
 
 export interface ReadingPreferences {
+  /** Default story length the reader asked for during onboarding. */
   storyLength?: "brief" | "standard" | "long";
+  /** Minutes the reader wants to spend; drives how many stories go in an edition. */
+  readingMinutes?: number;
+  /** Specific things to boost (people, teams, products, places). */
+  keywords?: string[];
+  /** Things the reader explicitly doesn't want. Matching stories are dropped. */
+  avoid?: string[];
   [key: string]: unknown;
 }
 

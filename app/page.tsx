@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { Masthead } from "@/components/Masthead";
 import { getStats } from "@/lib/db";
+import { getCurrentReader } from "@/lib/session";
 
 // Read DB counts on every request instead of caching them at build time.
 export const dynamic = "force-dynamic";
@@ -22,6 +24,7 @@ async function loadStats() {
 
 export default async function Home() {
   const status = await loadStats();
+  const reader = status.ok ? await getCurrentReader().catch(() => null) : null;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-8">
@@ -38,14 +41,24 @@ export default async function Home() {
             interests, then learns from what you read so tomorrow&apos;s paper fits you better.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-4">
-            {/* Onboarding is built in Phase 2; the button is disabled until then. */}
-            <span
-              aria-disabled
-              className="cursor-not-allowed rounded-sm bg-ink px-5 py-3 font-medium text-paper opacity-60"
-            >
-              Start my paper
-            </span>
-            <span className="text-sm text-ink-muted">Onboarding opens soon.</span>
+            {reader ? (
+              <>
+                <Link href="/paper" className="rounded-sm bg-ink px-5 py-3 font-medium text-paper">
+                  Read today&apos;s paper
+                </Link>
+                <Link href="/onboarding" className="text-sm text-ink-muted underline-offset-4 hover:underline">
+                  Edit my interests
+                </Link>
+                <span className="text-sm text-ink-muted">Welcome back, {reader.user.name}.</span>
+              </>
+            ) : (
+              <>
+                <Link href="/onboarding" className="rounded-sm bg-ink px-5 py-3 font-medium text-paper">
+                  Start my paper
+                </Link>
+                <span className="text-sm text-ink-muted">Two minutes, no sign-up form.</span>
+              </>
+            )}
           </div>
         </div>
 
