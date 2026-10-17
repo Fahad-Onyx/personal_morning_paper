@@ -1,21 +1,33 @@
 import Link from "next/link";
+import { IngestButton } from "@/components/IngestButton";
 import { Masthead } from "@/components/Masthead";
-import { getStats } from "@/lib/db";
+import { db, getStats } from "@/lib/db";
+import { localDate } from "@/lib/edition/types";
+import type { IngestReport } from "@/lib/ingestion/ingest";
+import { llmLabel } from "@/lib/llm";
+import { timeAgo } from "@/lib/format";
 import { getCurrentReader } from "@/lib/session";
 
-// Read DB counts on every request instead of caching them at build time.
+// Read live DB state on every request instead of caching it at build time.
 export const dynamic = "force-dynamic";
 
 const FEATURES = [
-  { title: "Learns your interests", body: "Tell us what you care about in your own words. We turn it into a reading profile." },
-  { title: "One edition a day", body: "Stories gathered from across the web, ranked for you, with a lead story and sections." },
-  { title: "Read or print", body: "Read on the web with links to the original articles, or download the same edition as a PDF." },
-  { title: "Gets better daily", body: "Clicks, skips and likes change what makes tomorrow's front page." },
+  { title: "Learns your interests", body: "Pick topic cards and tell us in your own words. An AI editor turns it into a weighted reading profile." },
+  { title: "One edition a day", body: "Stories from curated feeds, deduped and ranked for you, with a lead story, sections and a 'why this story' note." },
+  { title: "Read or print", body: "Read on the web with links to the originals, or download the same edition as a newspaper-style PDF." },
+  { title: "Gets better daily", body: "Clicks, skips, likes and reading time shift your section weights, with older signals fading over time." },
 ];
 
-async function loadStats() {
+async function loadHome() {
   try {
-    return { ok: true as const, stats: await getStats() };
+    const [stats, reader, lastIngest] = await Promise.all([
+      getStats(),
+      getCurrentReader(),
+      db.meta.getMeta<IngestReport>("last_ingest"),
+    ]);
+    const today = reader ? await db.editions.getEditionByDate(reader.user.id, localDate()) : null;
+    const lead = today ? (await db.editions.listEditionSummaries(reader!.user.id, 1))[0] : null;
+    return { ok: true as const, stats, reader, lastIngest, today, lead };
   } catch (err) {
     console.error("Database unavailable:", err);
     return { ok: false as const };
@@ -23,8 +35,8 @@ async function loadStats() {
 }
 
 export default async function Home() {
-  const status = await loadStats();
-  const reader = status.ok ? await getCurrentReader().catch(() => null) : null;
+  const home = await loadHome();
+  const reader = home.ok ? home.reader : null;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-8">
@@ -33,46 +45,78 @@ export default async function Home() {
       <section className="grid gap-8 border-b border-rule py-10 md:grid-cols-[2fr_1fr]">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-accent">Front page</p>
-          <h2 className="mt-2 font-serif text-3xl leading-tight sm:text-4xl">
-            Each morning, a newspaper written for one reader: you.
-          </h2>
-          <p className="mt-4 max-w-prose text-lg text-ink-muted">
-            Personal Morning Paper reads the web overnight and builds a single edition around your
-            interests, then learns from what you read so tomorrow&apos;s paper fits you better.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            {reader ? (
-              <>
+          {reader ? (
+            <>
+              <h2 className="mt-2 font-serif text-3xl leading-tight sm:text-4xl">Good morning, {reader.user.name}.</h2>
+              {home.ok && home.lead ? (
+                <p className="mt-4 max-w-prose text-lg text-ink-muted">
+                  Today&apos;s paper leads with{" "}
+                  <Link href="/paper" className="font-serif font-semibold text-ink underline-offset-4 hover:underline">
+                    {home.lead.leadTitle}
+                  </Link>
+                  .
+                </p>
+              ) : (
+                <p className="mt-4 max-w-prose text-lg text-ink-muted">Today&apos;s edition is ready to print.</p>
+              )}
+              <div className="mt-6 flex flex-wrap items-center gap-4">
                 <Link href="/paper" className="rounded-sm bg-ink px-5 py-3 font-medium text-paper">
-                  Read today&apos;s paper
+                  {home.ok && home.today ? "Read today's paper" : "Print today's paper"}
                 </Link>
-                <Link href="/onboarding" className="text-sm text-ink-muted underline-offset-4 hover:underline">
-                  Edit my interests
+                <Link href="/archive" className="text-sm underline underline-offset-4">
+                  Archive
                 </Link>
-                <span className="text-sm text-ink-muted">Welcome back, {reader.user.name}.</span>
-              </>
-            ) : (
-              <>
+                <Link href="/profile" className="text-sm underline underline-offset-4">
+                  My profile
+                </Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="mt-2 font-serif text-3xl leading-tight sm:text-4xl">
+                Each morning, a newspaper written for one reader: you.
+              </h2>
+              <p className="mt-4 max-w-prose text-lg text-ink-muted">
+                Personal Morning Paper reads the web and builds a single edition around your interests, then learns from
+                what you read so tomorrow&apos;s paper fits you better.
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-4">
                 <Link href="/onboarding" className="rounded-sm bg-ink px-5 py-3 font-medium text-paper">
                   Start my paper
                 </Link>
                 <span className="text-sm text-ink-muted">Two minutes, no sign-up form.</span>
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
 
         <aside className="border-t border-rule pt-6 md:border-l md:border-t-0 md:pl-8 md:pt-0">
-          <h3 className="font-serif text-lg font-semibold">System status</h3>
-          {status.ok ? (
-            <dl className="mt-3 grid grid-cols-2 gap-y-1 text-sm">
-              {Object.entries(status.stats).map(([table, n]) => (
-                <div key={table} className="contents">
-                  <dt className="text-ink-muted">{table.replace("_", " ")}</dt>
-                  <dd className="text-right tabular-nums">{n}</dd>
-                </div>
-              ))}
-            </dl>
+          <h3 className="font-serif text-lg font-semibold">The newsroom</h3>
+          {home.ok ? (
+            <>
+              <dl className="mt-3 grid grid-cols-2 gap-y-1 text-sm">
+                <dt className="text-ink-muted">stories on file</dt>
+                <dd className="text-right tabular-nums">{home.stats.articles}</dd>
+                <dt className="text-ink-muted">readers</dt>
+                <dd className="text-right tabular-nums">{home.stats.users}</dd>
+                <dt className="text-ink-muted">editions printed</dt>
+                <dd className="text-right tabular-nums">{home.stats.editions}</dd>
+                <dt className="text-ink-muted">reader signals</dt>
+                <dd className="text-right tabular-nums">{home.stats.events}</dd>
+                <dt className="text-ink-muted">editor</dt>
+                <dd className="text-right">{llmLabel()}</dd>
+                <dt className="text-ink-muted">last fetch</dt>
+                <dd className="text-right">
+                  {home.lastIngest
+                    ? `${timeAgo(home.lastIngest.updatedAt)}${home.lastIngest.value.mode === "sample" ? " (samples)" : ""}`
+                    : "never"}
+                </dd>
+              </dl>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <IngestButton label="Fetch the news" />
+                <IngestButton sample label="Load samples" />
+              </div>
+            </>
           ) : (
             <p className="mt-3 text-sm text-accent">
               Can&apos;t open the database. Check DATABASE_PATH in .env.local, then run
@@ -92,7 +136,7 @@ export default async function Home() {
       </section>
 
       <footer className="border-t border-rule pt-4 text-center text-xs text-ink-muted">
-        NaSCon &apos;26 · Eynvision
+        NaSCon &apos;26 · Eynvision · Personal Morning Paper
       </footer>
     </main>
   );

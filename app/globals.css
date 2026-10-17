@@ -44,3 +44,11 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+@keyframes press {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
+}
+
+html { scroll-behavior: smooth; }
+::selection { background: var(--accent); color: var(--paper); }
