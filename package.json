@@ -11,7 +11,9 @@
     "db:check": "tsx --env-file-if-exists=.env.local scripts/db-check.ts",
     "typecheck": "tsc --noEmit",
     "ingest": "tsx --env-file-if-exists=.env.local scripts/ingest.ts",
-    "edition:build": "tsx --env-file-if-exists=.env.local scripts/build-edition.ts"
+    "edition:build": "tsx --env-file-if-exists=.env.local scripts/build-edition.ts",
+    "logic:check": "tsx --env-file-if-exists=.env.local scripts/logic-check.ts",
+    "test": "npm run db:check && npm run logic:check"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",

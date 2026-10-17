@@ -19,6 +19,8 @@ const KEYWORD_CAP = 0.4;
 
 export interface ScoreParts {
   topicWeight: number;
+  /** How far learning has moved this topic from what onboarding set. */
+  learnedShift: number;
   recency: number; // 0..1, halves every RECENCY_HALF_LIFE_HOURS
   ageHours: number;
   keywordBonus: number;
@@ -40,8 +42,9 @@ export function scoreArticle(article: Article, profile: InterestProfile, nowMs =
   const avoid = profile.preferences.avoid ?? [];
   if (avoid.some((term) => containsTerm(title, term) || containsTerm(body.slice(0, 600), term))) return null;
 
-  const topicWeight =
-    profile.topics.find((t) => t.topic === article.topic)?.weight ?? UNFOLLOWED_TOPIC_WEIGHT;
+  const followed = profile.topics.find((t) => t.topic === article.topic && t.weight > 0);
+  const topicWeight = followed?.weight ?? UNFOLLOWED_TOPIC_WEIGHT;
+  const learnedShift = followed ? followed.weight - followed.baseWeight : 0;
 
   const published = Date.parse(article.publishedAt ?? article.fetchedAt);
   const ageHours = Math.max(0, (nowMs - published) / 3_600_000);
@@ -68,7 +71,7 @@ export function scoreArticle(article: Article, profile: InterestProfile, nowMs =
   return {
     article,
     score: Math.round(score * 1000) / 1000,
-    parts: { topicWeight, recency, ageHours, keywordBonus, matchedKeywords, quality },
+    parts: { topicWeight, learnedShift, recency, ageHours, keywordBonus, matchedKeywords, quality },
   };
 }
 
@@ -102,7 +105,8 @@ export function explain(s: ScoredArticle, ctx: { isLead: boolean; topicRank: num
   if (parts.matchedKeywords.length) {
     reasons.push(`it mentions ${quoteList(parts.matchedKeywords.slice(0, 2))}, which you asked us to watch`);
   }
-  if (parts.topicWeight >= 0.85) reasons.push(`${topic} is one of your favourite sections`);
+  if (parts.learnedShift >= 0.1) reasons.push(`you've been reading more ${topic} lately`);
+  else if (parts.topicWeight >= 0.85) reasons.push(`${topic} is one of your favourite sections`);
   else if (parts.topicWeight >= 0.5) reasons.push(`you follow ${topic}`);
   else if (parts.topicWeight <= 0.1) reasons.push(`it's outside your usual sections, as a wildcard`);
 

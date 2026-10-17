@@ -2,6 +2,7 @@ import type { EditionView } from "@/lib/edition/view";
 import { longDate } from "@/lib/format";
 import { topicLabel } from "@/lib/topics";
 import { DwellTracker } from "./DwellTracker";
+import { LearningNote } from "./LearningNote";
 import { StoryCard } from "./StoryCard";
 
 /**
@@ -49,6 +50,7 @@ export function EditionPaper({ view, toolbar }: { view: EditionView; toolbar?: R
       </header>
 
       {toolbar && <div className="mt-4">{toolbar}</div>}
+      <LearningNote layout={layout} />
 
       <section className="border-b-2 border-ink py-8">
         <StoryCard story={lead} editionId={edition.id} variant="lead" sectionLabel={layout.sectionLabels?.[lead.item.section] ?? topicLabel(lead.item.section)} />

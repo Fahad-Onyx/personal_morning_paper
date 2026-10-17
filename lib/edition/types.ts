@@ -16,6 +16,8 @@ export type EditionLayout = {
   summariesBy: "llm" | "mixed" | "extractive";
   llm: boolean;
   builtAt: string;
+  /** Topic weights the learning loop changed right before this edition was built. */
+  learning?: { topic: string; before: number; after: number; events: number }[];
 };
 
 /** Today's date in the server's time zone as YYYY-MM-DD (the edition key). */

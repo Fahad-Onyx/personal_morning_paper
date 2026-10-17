@@ -107,4 +107,11 @@ export const MIGRATIONS: string[] = [
     updated_at  TEXT NOT NULL
   );
   `,
+
+  // v3: remember what the reader told us at onboarding, separately from the
+  // weight the learning loop adjusts. Learning is recomputed from this base.
+  `
+  ALTER TABLE profile_topics ADD COLUMN base_weight REAL NOT NULL DEFAULT 0;
+  UPDATE profile_topics SET base_weight = weight WHERE source = 'onboarding';
+  `,
 ];

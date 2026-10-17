@@ -11,7 +11,7 @@ type ProfileRow = {
   created_at: string;
   updated_at: string;
 };
-type TopicRow = { topic: string; weight: number; source: TopicSource; updated_at: string };
+type TopicRow = { topic: string; weight: number; base_weight: number; source: TopicSource; updated_at: string };
 
 export interface UpsertProfileInput {
   userId: string;
@@ -57,11 +57,12 @@ export async function upsertProfile(input: UpsertProfileInput): Promise<Interest
 
     db.prepare("DELETE FROM profile_topics WHERE profile_id = ?").run(profileId);
     const insertTopic = db.prepare(
-      `INSERT INTO profile_topics (profile_id, topic, weight, source, updated_at)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO profile_topics (profile_id, topic, weight, base_weight, source, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
     );
     for (const t of input.topics) {
-      insertTopic.run(profileId, t.topic, clampWeight(t.weight), t.source ?? "onboarding", ts);
+      const w = clampWeight(t.weight);
+      insertTopic.run(profileId, t.topic, w, w, t.source ?? "onboarding", ts);
     }
   })();
 
@@ -76,7 +77,7 @@ export async function getProfileByUser(userId: string): Promise<InterestProfile 
   if (!p) return null;
 
   const topics = db
-    .prepare("SELECT topic, weight, source, updated_at FROM profile_topics WHERE profile_id = ? ORDER BY weight DESC")
+    .prepare("SELECT topic, weight, base_weight, source, updated_at FROM profile_topics WHERE profile_id = ? ORDER BY weight DESC")
     .all(p.id) as TopicRow[];
 
   return {
@@ -86,7 +87,13 @@ export async function getProfileByUser(userId: string): Promise<InterestProfile 
     summary: p.summary,
     preferences: parseJson<ReadingPreferences>(p.preferences, {}),
     topics: topics.map(
-      (t): ProfileTopic => ({ topic: t.topic, weight: t.weight, source: t.source, updatedAt: t.updated_at }),
+      (t): ProfileTopic => ({
+        topic: t.topic,
+        weight: t.weight,
+        baseWeight: t.base_weight,
+        source: t.source,
+        updatedAt: t.updated_at,
+      }),
     ),
     createdAt: p.created_at,
     updatedAt: p.updated_at,
@@ -95,7 +102,8 @@ export async function getProfileByUser(userId: string): Promise<InterestProfile 
 
 /**
  * Sets new weights for some topics without touching the rest (the learning loop
- * uses this). Topics that don't exist yet are added with source 'learned'.
+ * uses this). Base weights are kept. Topics that don't exist yet are added
+ * with source 'learned' and a base of 0.
  */
 export async function setTopicWeights(
   profileId: string,

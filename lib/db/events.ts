@@ -68,3 +68,29 @@ export async function deleteLatest(userId: string, articleId: string, type: Read
     .run(userId, articleId, type);
   return res.changes > 0;
 }
+
+/** Events since `sinceIso` joined with the topic of the article they refer to (learning input). */
+export async function listEventsWithTopicSince(
+  userId: string,
+  sinceIso: string,
+): Promise<(ReaderEvent & { topic: string | null })[]> {
+  const rows = getDb()
+    .prepare(
+      `SELECT e.*, a.topic AS topic FROM events e
+       LEFT JOIN articles a ON a.id = e.article_id
+       WHERE e.user_id = ? AND e.created_at >= ?
+       ORDER BY e.created_at, e.rowid`,
+    )
+    .all(userId, sinceIso) as (EventRow & { topic: string | null })[];
+  return rows.map((r) => ({ ...toEvent(r), topic: r.topic }));
+}
+
+/** Event counts per type since `sinceIso` (profile page activity summary). */
+export async function countByType(userId: string, sinceIso: string): Promise<Record<ReaderEvent["type"], number>> {
+  const rows = getDb()
+    .prepare("SELECT type, COUNT(*) AS n FROM events WHERE user_id = ? AND created_at >= ? GROUP BY type")
+    .all(userId, sinceIso) as { type: ReaderEvent["type"]; n: number }[];
+  const out = { click: 0, skip: 0, like: 0, dislike: 0, dwell: 0 };
+  for (const r of rows) out[r.type] = r.n;
+  return out;
+}

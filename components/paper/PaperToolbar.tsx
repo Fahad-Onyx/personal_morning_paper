@@ -18,8 +18,8 @@ export function PaperToolbar({ view, isToday }: { view: EditionView; isToday: bo
         <Link href="/archive" className="text-ink-muted hover:text-ink">
           Archive
         </Link>
-        <Link href="/onboarding" className="text-ink-muted hover:text-ink">
-          Edit interests
+        <Link href="/profile" className="text-ink-muted hover:text-ink">
+          Profile
         </Link>
       </div>
       <div className="flex flex-wrap items-center gap-4">

@@ -17,7 +17,9 @@ export type TopicSource = "onboarding" | "learned";
 
 export interface ProfileTopic {
   topic: string;
-  weight: number; // 0..1
+  weight: number; // 0..1, what ranking uses
+  /** What onboarding set (0 for topics discovered by learning). */
+  baseWeight: number;
   source: TopicSource;
   updatedAt: ISODateTime;
 }

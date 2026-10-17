@@ -1,4 +1,5 @@
 import { db, type Edition, type InterestProfile, type NewEditionItem, type StoryLength, type User } from "@/lib/db";
+import { applyLearning } from "@/lib/learning/update";
 import { llmEnabled } from "@/lib/llm";
 import { explain, scoreArticle, titleSimilarity, type ScoredArticle } from "@/lib/ranking/score";
 import { topicLabel } from "@/lib/topics";
@@ -36,6 +37,8 @@ const MAX_WILDCARDS = 2; // stories from topics the reader doesn't follow, for s
 export const WILDCARD_SECTION = "wildcard";
 
 export async function buildEdition(user: User, opts: { date?: string } = {}): Promise<Edition> {
+  // Learning loop first: fold recent clicks, skips, likes and dwell into the topic weights.
+  const learning = await applyLearning(user.id);
   const profile = await db.profiles.getProfileByUser(user.id);
   if (!profile) throw new EditionError("no_profile", "Finish onboarding first.");
 
@@ -101,6 +104,10 @@ export async function buildEdition(user: User, opts: { date?: string } = {}): Pr
     summariesBy: llmCount === items.length ? "llm" : llmCount > 0 ? "mixed" : "extractive",
     llm: llmEnabled(),
     builtAt: new Date().toISOString(),
+    learning: (learning?.changes ?? [])
+      .filter((c) => Math.abs(c.after - c.before) >= 0.01)
+      .slice(0, 6)
+      .map(({ topic, before, after, events }) => ({ topic, before, after, events })),
   };
 
   return db.editions.saveEdition({ userId: user.id, editionDate: date, layout, items });

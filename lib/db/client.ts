@@ -11,11 +11,17 @@ import { MIGRATIONS } from "./schema";
  * The connection is cached on globalThis so Next.js hot reload in dev doesn't
  * open a new connection on every code change.
  */
-const globalForDb = globalThis as unknown as { __pmpDb?: Database.Database };
+const globalForDb = globalThis as unknown as { __pmpDb?: Database.Database; __pmpDbVersion?: number };
 
 export function getDb(): Database.Database {
   if (!globalForDb.__pmpDb) {
     globalForDb.__pmpDb = open(env().DATABASE_PATH);
+    globalForDb.__pmpDbVersion = MIGRATIONS.length;
+  }
+  // In dev, hot reload can bring in new migrations while the connection stays open.
+  if (globalForDb.__pmpDbVersion !== MIGRATIONS.length) {
+    migrate(globalForDb.__pmpDb);
+    globalForDb.__pmpDbVersion = MIGRATIONS.length;
   }
   return globalForDb.__pmpDb;
 }
