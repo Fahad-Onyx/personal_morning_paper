@@ -12,9 +12,10 @@ import * as profiles from "./profiles";
 import * as articles from "./articles";
 import * as editions from "./editions";
 import * as events from "./events";
+import * as meta from "./meta";
 import { getDb } from "./client";
 
-export const db = { users, profiles, articles, editions, events };
+export const db = { users, profiles, articles, editions, events, meta };
 
 export type * from "./types";
 

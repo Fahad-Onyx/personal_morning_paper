@@ -98,4 +98,13 @@ export const MIGRATIONS: string[] = [
   );
   CREATE INDEX idx_events_user_time ON events(user_id, created_at);
   `,
+
+  // v2: small key/value store for app state such as the last ingestion report.
+  `
+  CREATE TABLE app_meta (
+    key         TEXT PRIMARY KEY,
+    value       TEXT NOT NULL,          -- JSON
+    updated_at  TEXT NOT NULL
+  );
+  `,
 ];

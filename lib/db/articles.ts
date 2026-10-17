@@ -85,3 +85,12 @@ export async function listRecentArticles(sinceIso: string, limit = 500): Promise
     .all(sinceIso, limit) as ArticleRow[];
   return rows.map(toArticle);
 }
+
+/** Cheap pre-check so ingestion can skip downloading pages it already has. */
+export async function existsByUrlOrHash(url: string, contentHash: string | null): Promise<boolean> {
+  return Boolean(
+    getDb()
+      .prepare("SELECT 1 FROM articles WHERE url = ? OR (content_hash IS NOT NULL AND content_hash = ?) LIMIT 1")
+      .get(url, contentHash),
+  );
+}

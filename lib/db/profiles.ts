@@ -113,3 +113,11 @@ export async function setTopicWeights(
     db.prepare("UPDATE interest_profiles SET updated_at = ? WHERE id = ?").run(ts, profileId);
   })();
 }
+
+/** Every topic any reader follows: ingestion only fetches feeds for these. */
+export async function listFollowedTopics(): Promise<string[]> {
+  const rows = getDb()
+    .prepare("SELECT DISTINCT topic FROM profile_topics WHERE weight > 0")
+    .all() as { topic: string }[];
+  return rows.map((r) => r.topic);
+}
