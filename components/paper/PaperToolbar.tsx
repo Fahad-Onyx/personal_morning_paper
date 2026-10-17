@@ -21,6 +21,17 @@ export function PaperToolbar({ view, isToday }: { view: EditionView; isToday: bo
       </div>
       <div className="flex flex-wrap items-center gap-4">
         {isToday && <PrintButton label="Reprint with latest news" variant="link" ingest="1" />}
+        <a
+          href={`/api/editions/${view.edition.id}/pdf?inline=1`}
+          target="_blank"
+          rel="noopener"
+          className="text-ink-muted underline underline-offset-4 hover:text-ink"
+        >
+          View PDF
+        </a>
+        <a href={`/api/editions/${view.edition.id}/pdf`} className="rounded-sm bg-ink px-3 py-1.5 font-medium text-paper">
+          Download PDF ↓
+        </a>
         <span className="text-xs text-ink-muted">Edition {view.edition.editionDate}</span>
       </div>
     </div>

@@ -13,7 +13,7 @@ Built for NaSCon '26 (Eynvision).
 | 3 | RSS ingestion, text extraction, dedupe | ✅ done |
 | 4 | Ranking + edition builder | ✅ done |
 | 5 | Web reader | ✅ done |
-| 6 | PDF export | ⏳ |
+| 6 | PDF export | ✅ done |
 | 7 | Archive | ⏳ |
 | 8 | Learning loop | ⏳ |
 | 9 | "3 things you learned today" | ⏳ |
