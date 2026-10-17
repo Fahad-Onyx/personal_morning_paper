@@ -16,7 +16,7 @@ Built for NaSCon '26 (Eynvision).
 | 6 | PDF export | ✅ done |
 | 7 | Archive | ✅ done |
 | 8 | Learning loop | ✅ done |
-| 9 | "3 things you learned today" | ⏳ |
+| 9 | "3 things you learned today" | ✅ done |
 | 10 | Polish | ⏳ |
 
 ## Run it

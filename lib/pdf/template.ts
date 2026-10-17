@@ -1,3 +1,4 @@
+import type { Recap } from "@/lib/edition/recap";
 import type { EditionView, StoryView } from "@/lib/edition/view";
 import { longDate, paragraphs, timeAgo } from "@/lib/format";
 import { topicLabel } from "@/lib/topics";
@@ -38,6 +39,15 @@ function story(s: StoryView, opts: { lead?: boolean } = {}): string {
     ${item.whyThisStory ? `<p class="why"><b>Why this story:</b> ${esc(item.whyThisStory)}</p>` : ""}
     <p class="link">Read more: <a href="${esc(article.url)}">${esc(host(article.url))}</a></p>
   </article>`;
+}
+
+function recapBox(recap: Recap | null): string {
+  if (!recap || recap.items.length === 0) return "";
+  return `
+  <div class="recap">
+    <h2>3 things you learned today</h2>
+    <ol>${recap.items.map((it, i) => `<li><span class="n">${i + 1}</span><span>${esc(it.fact)}</span></li>`).join("")}</ol>
+  </div>`;
 }
 
 export function renderEditionHtml(view: EditionView): string {
@@ -81,6 +91,11 @@ export function renderEditionHtml(view: EditionView): string {
   section h2 span { font: 6.8pt "Helvetica Neue", Arial, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #5a554b; font-weight: normal; }
   .cols { columns: ${columns}; column-gap: 14pt; column-rule: .5pt solid #cfc8b8; }
   .cols .story { break-inside: avoid; padding-bottom: 7pt; margin-bottom: 7pt; border-bottom: .5pt solid #cfc8b8; }
+  .recap { border-top: 3pt double #000; border-bottom: 3pt double #000; padding: 6pt 0 8pt; margin: 0 0 10pt; break-inside: avoid; }
+  .recap h2 { font-size: 14pt; font-style: italic; margin: 0 0 6pt; }
+  .recap ol { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12pt; }
+  .recap li { display: flex; gap: 6pt; font-size: 9.6pt; line-height: 1.3; }
+  .recap .n { font-size: 26pt; font-weight: bold; color: #9b2c1f; line-height: .9; }
   footer { margin-top: 12pt; padding-top: 4pt; border-top: .6pt solid #000; text-align: center; color: #5a554b;
            font: 7pt "Helvetica Neue", Arial, sans-serif; }
 </style></head>
@@ -92,6 +107,7 @@ export function renderEditionHtml(view: EditionView): string {
   <div class="sections">${visibleSections.map((s) => esc(s.label)).join(" &nbsp;·&nbsp; ")}</div>
 
   ${lead.skipped ? "" : story(lead, { lead: true })}
+  ${recapBox(edition.recap as Recap | null)}
 
   ${visibleSections
     .map(

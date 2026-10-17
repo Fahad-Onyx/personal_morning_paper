@@ -5,6 +5,7 @@
  */
 import assert from "node:assert/strict";
 import type { Article, InterestProfile } from "@/lib/db";
+import { keyFact } from "@/lib/edition/recap";
 import { sentences } from "@/lib/edition/summarize";
 import { canonicalUrl, contentHash } from "@/lib/ingestion/normalize";
 import { computeWeights } from "@/lib/learning/update";
@@ -66,5 +67,14 @@ assert.ok(w("business") >= 0 && w("business") < 0.3);
 assert.ok(w("space") > 0 && w("space") < 0.35);
 // Recomputed from base, so the same signals always give the same weights.
 assert.equal(computeWeights(profile, [{ topic: "sports", value: 5 }]).changes[0].after, w("sports"));
+
+// Recap fallback picks the most fact-dense sentence.
+const factArticle = {
+  ...art("Satellite launch", "space"),
+  contentText:
+    "Officials were pleased with how the day went for everyone involved here. " +
+    "The satellite reached orbit 17 minutes after lift-off and sent signals to Karachi within 2 hours.",
+};
+assert.match(keyFact(factArticle), /17 minutes/);
 
 console.log("✅ logic checks passed");

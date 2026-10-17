@@ -177,3 +177,8 @@ export async function listEditionSummaries(userId: string, limit = 60): Promise<
     sections: r.sections ? r.sections.split(",") : [],
   }));
 }
+
+/** Replaces an edition's recap (the "3 things you learned" box). */
+export async function setRecap(editionId: string, recap: unknown): Promise<void> {
+  getDb().prepare("UPDATE editions SET recap = ? WHERE id = ?").run(JSON.stringify(recap), editionId);
+}

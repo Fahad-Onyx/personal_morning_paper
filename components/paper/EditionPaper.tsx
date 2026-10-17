@@ -3,6 +3,8 @@ import { longDate } from "@/lib/format";
 import { topicLabel } from "@/lib/topics";
 import { DwellTracker } from "./DwellTracker";
 import { LearningNote } from "./LearningNote";
+import { RecapBox } from "./RecapBox";
+import type { Recap } from "@/lib/edition/recap";
 import { StoryCard } from "./StoryCard";
 
 /**
@@ -52,9 +54,11 @@ export function EditionPaper({ view, toolbar }: { view: EditionView; toolbar?: R
       {toolbar && <div className="mt-4">{toolbar}</div>}
       <LearningNote layout={layout} />
 
-      <section className="border-b-2 border-ink py-8">
+      <section className="py-8">
         <StoryCard story={lead} editionId={edition.id} variant="lead" sectionLabel={layout.sectionLabels?.[lead.item.section] ?? topicLabel(lead.item.section)} />
       </section>
+
+      <RecapBox editionId={edition.id} initial={edition.recap as Recap | null} />
 
       {sections.map((section) => (
         <section key={section.id} id={`section-${section.id}`} className="scroll-mt-4 border-b border-rule py-8">

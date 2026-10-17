@@ -3,6 +3,7 @@ import { applyLearning } from "@/lib/learning/update";
 import { llmEnabled } from "@/lib/llm";
 import { explain, scoreArticle, titleSimilarity, type ScoredArticle } from "@/lib/ranking/score";
 import { topicLabel } from "@/lib/topics";
+import { buildFrontPageRecap } from "./recap";
 import { summarizeAll } from "./summarize";
 import { localDate, type EditionLayout } from "./types";
 
@@ -76,7 +77,11 @@ export async function buildEdition(user: User, opts: { date?: string } = {}): Pr
   ];
 
   const withLength = ordered.map((o) => ({ ...o, length: storyLength(o, prefLength, weightOf(o.section)) }));
-  const { summaries, llmCount } = await summarizeAll(withLength.map((o) => ({ article: o.s.article, length: o.length })));
+  // Summaries and the "3 things you learned" recap are independent LLM calls, so run them together.
+  const [{ summaries, llmCount }, recap] = await Promise.all([
+    summarizeAll(withLength.map((o) => ({ article: o.s.article, length: o.length }))),
+    buildFrontPageRecap(ordered.map((o) => ({ article: o.s.article, section: o.section }))),
+  ]);
 
   const items: NewEditionItem[] = withLength.map((o, position) => ({
     articleId: o.s.article.id,
@@ -110,7 +115,7 @@ export async function buildEdition(user: User, opts: { date?: string } = {}): Pr
       .map(({ topic, before, after, events }) => ({ topic, before, after, events })),
   };
 
-  return db.editions.saveEdition({ userId: user.id, editionDate: date, layout, items });
+  return db.editions.saveEdition({ userId: user.id, editionDate: date, layout, recap, items });
 }
 
 /** Scores the candidate pool and removes what this reader shouldn't see again. */

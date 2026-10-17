@@ -64,7 +64,7 @@ export function StoryCard({
     .join(" · ");
 
   return (
-    <article data-article-id={article.id} className={`group ${isLead ? "" : "break-inside-avoid"}`}>
+    <article id={`story-${article.id}`} data-article-id={article.id} className={`group ${isLead ? "" : "break-inside-avoid"}`}>
       {isLead && sectionLabel && (
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-accent">Lead story · {sectionLabel}</p>
       )}
