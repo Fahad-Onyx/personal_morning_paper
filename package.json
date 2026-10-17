@@ -10,7 +10,8 @@
     "db:init": "tsx --env-file-if-exists=.env.local scripts/db-init.ts",
     "db:check": "tsx --env-file-if-exists=.env.local scripts/db-check.ts",
     "typecheck": "tsc --noEmit",
-    "ingest": "tsx --env-file-if-exists=.env.local scripts/ingest.ts"
+    "ingest": "tsx --env-file-if-exists=.env.local scripts/ingest.ts",
+    "edition:build": "tsx --env-file-if-exists=.env.local scripts/build-edition.ts"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",

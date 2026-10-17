@@ -11,7 +11,7 @@ Built for NaSCon '26 (Eynvision).
 | 1 | Project setup, SQLite schema, data-access layer, home page | ✅ done |
 | 2 | Onboarding → LLM interest profile | ✅ done |
 | 3 | RSS ingestion, text extraction, dedupe | ✅ done |
-| 4 | Ranking + edition builder | ⏳ |
+| 4 | Ranking + edition builder | ✅ done |
 | 5 | Web reader | ⏳ |
 | 6 | PDF export | ⏳ |
 | 7 | Archive | ⏳ |

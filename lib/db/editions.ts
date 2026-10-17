@@ -129,3 +129,15 @@ export async function listEditionItems(editionId: string): Promise<EditionItem[]
     .all(editionId) as ItemRow[];
   return rows.map(toItem);
 }
+
+/** Article ids already printed in this reader's other editions, so stories don't repeat day to day. */
+export async function listPrintedArticleIds(userId: string, exceptDate: ISODate): Promise<Set<string>> {
+  const rows = getDb()
+    .prepare(
+      `SELECT DISTINCT i.article_id FROM edition_items i
+       JOIN editions e ON e.id = i.edition_id
+       WHERE e.user_id = ? AND e.edition_date <> ?`,
+    )
+    .all(userId, exceptDate) as { article_id: string }[];
+  return new Set(rows.map((r) => r.article_id));
+}
