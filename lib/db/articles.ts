@@ -94,3 +94,12 @@ export async function existsByUrlOrHash(url: string, contentHash: string | null)
       .get(url, contentHash),
   );
 }
+
+/** Number of articles published (or fetched) since `sinceIso`. */
+export async function countSince(sinceIso: string): Promise<number> {
+  return (
+    getDb()
+      .prepare("SELECT COUNT(*) AS n FROM articles WHERE COALESCE(published_at, fetched_at) >= ?")
+      .get(sinceIso) as { n: number }
+  ).n;
+}

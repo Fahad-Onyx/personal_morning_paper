@@ -48,3 +48,23 @@ export async function listEventsSince(userId: string, sinceIso: string): Promise
     .all(userId, sinceIso) as EventRow[];
   return rows.map(toEvent);
 }
+
+/** All events on one edition, oldest first (to replay skips and reactions in the reader). */
+export async function listEventsForEdition(editionId: string): Promise<ReaderEvent[]> {
+  const rows = getDb()
+    .prepare("SELECT * FROM events WHERE edition_id = ? ORDER BY created_at, rowid")
+    .all(editionId) as EventRow[];
+  return rows.map(toEvent);
+}
+
+/** Removes the reader's most recent event of a type on an article (used by "Undo skip"). */
+export async function deleteLatest(userId: string, articleId: string, type: ReaderEvent["type"]): Promise<boolean> {
+  const res = getDb()
+    .prepare(
+      `DELETE FROM events WHERE id = (
+         SELECT id FROM events WHERE user_id = ? AND article_id = ? AND type = ?
+         ORDER BY created_at DESC, rowid DESC LIMIT 1)`,
+    )
+    .run(userId, articleId, type);
+  return res.changes > 0;
+}

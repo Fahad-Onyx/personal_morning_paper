@@ -21,9 +21,15 @@ export interface SummaryRequest {
   length: StoryLength;
 }
 
-/** Splits text into sentences and drops fragments like bylines and captions. */
+/**
+ * Splits text into sentences and drops fragments like bylines and captions.
+ * Only splits where punctuation is followed by a space and a capital letter
+ * or quote, so "3.5 GHz" and "U.S." don't break a sentence.
+ */
 export function sentences(text: string): string[] {
-  return (text.match(/[^.!?]+[.!?]+["”’)]?(\s|$)|[^.!?]+$/g) ?? [])
+  return text
+    .replace(/\s+/g, " ")
+    .split(/(?<=[.!?]["”’)]?)\s+(?=["“‘(]?[A-Z0-9])/)
     .map((s) => s.trim())
     .filter((s) => s.length >= 40 && s.split(" ").length >= 6);
 }
