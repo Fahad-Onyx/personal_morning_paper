@@ -15,6 +15,9 @@ export function PaperToolbar({ view, isToday }: { view: EditionView; isToday: bo
             Today&apos;s paper
           </Link>
         )}
+        <Link href="/archive" className="text-ink-muted hover:text-ink">
+          Archive
+        </Link>
         <Link href="/onboarding" className="text-ink-muted hover:text-ink">
           Edit interests
         </Link>

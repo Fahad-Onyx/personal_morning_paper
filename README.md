@@ -14,7 +14,7 @@ Built for NaSCon '26 (Eynvision).
 | 4 | Ranking + edition builder | ✅ done |
 | 5 | Web reader | ✅ done |
 | 6 | PDF export | ✅ done |
-| 7 | Archive | ⏳ |
+| 7 | Archive | ✅ done |
 | 8 | Learning loop | ⏳ |
 | 9 | "3 things you learned today" | ⏳ |
 | 10 | Polish | ⏳ |

@@ -3,6 +3,7 @@
  *   npm run edition:build
  *   npm run edition:build -- --ingest          fetch live feeds first
  *   npm run edition:build -- --ingest-sample   load offline sample stories first
+ *   npm run edition:build -- --date 2026-10-16 build for another date (e.g. to fill the archive)
  */
 import { db } from "@/lib/db";
 import { buildEdition, EditionError } from "@/lib/edition/build";
@@ -14,12 +15,16 @@ async function main() {
   if (args.includes("--ingest")) console.log(`ingested ${(await runIngestion()).inserted} new articles`);
   if (args.includes("--ingest-sample")) console.log(`ingested ${(await ingestSamples()).inserted} sample articles`);
 
+  const dateArg = args.indexOf("--date");
+  const date = dateArg >= 0 ? args[dateArg + 1] : undefined;
+  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error("--date must be YYYY-MM-DD");
+
   const users = await db.users.listUsers();
   if (users.length === 0) console.log("No readers yet. Onboard at http://localhost:3000/onboarding");
 
   for (const user of users) {
     try {
-      const edition = await buildEdition(user);
+      const edition = await buildEdition(user, { date });
       const items = await db.editions.listEditionItems(edition.id);
       console.log(`\n${user.name} · ${edition.editionDate} · ${items.length} stories`);
       for (const it of items) {

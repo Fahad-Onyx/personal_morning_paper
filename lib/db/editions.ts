@@ -141,3 +141,39 @@ export async function listPrintedArticleIds(userId: string, exceptDate: ISODate)
     .all(userId, exceptDate) as { article_id: string }[];
   return new Set(rows.map((r) => r.article_id));
 }
+
+export interface EditionSummary {
+  edition: Edition;
+  storyCount: number;
+  leadTitle: string | null;
+  leadSource: string | null;
+  sections: string[];
+}
+
+/** Archive listing: each edition with its lead headline and sections, newest first, in one query. */
+export async function listEditionSummaries(userId: string, limit = 60): Promise<EditionSummary[]> {
+  const rows = getDb()
+    .prepare(
+      `SELECT e.*,
+              (SELECT COUNT(*) FROM edition_items i WHERE i.edition_id = e.id) AS story_count,
+              (SELECT a.title FROM edition_items i JOIN articles a ON a.id = i.article_id
+                WHERE i.edition_id = e.id AND i.is_lead = 1) AS lead_title,
+              (SELECT a.source FROM edition_items i JOIN articles a ON a.id = i.article_id
+                WHERE i.edition_id = e.id AND i.is_lead = 1) AS lead_source,
+              (SELECT GROUP_CONCAT(DISTINCT i.section) FROM edition_items i WHERE i.edition_id = e.id) AS sections
+       FROM editions e WHERE e.user_id = ? ORDER BY e.edition_date DESC LIMIT ?`,
+    )
+    .all(userId, limit) as (EditionRow & {
+    story_count: number;
+    lead_title: string | null;
+    lead_source: string | null;
+    sections: string | null;
+  })[];
+  return rows.map((r) => ({
+    edition: toEdition(r),
+    storyCount: r.story_count,
+    leadTitle: r.lead_title,
+    leadSource: r.lead_source,
+    sections: r.sections ? r.sections.split(",") : [],
+  }));
+}
